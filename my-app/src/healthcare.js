@@ -1,8 +1,8 @@
 import {useState,useEffect} from 'react';
 import {ethers} from "ethers";
 
-const healtcare=()=>{
-    const [constract,setcontract]=useState(null);
+const Healthcare=()=>{
+    const [Contract,setcontract]=useState(null);
     const [account,setaccount]=useState(null);
     const [isowner,setowner]=useState(null);
 
@@ -120,17 +120,41 @@ const healtcare=()=>{
    useEffect(()=>{
      const wallet=async()=>{
        try{
-          
+        const provider = new ethers.providers.Web3Provider(window.ethereum)
+        await provider.send("eth_requestAccounts", []);
+        
+       
+        const signer = provider.getSigner()
+        const accountaddress=await signer.getAddress();
 
+        setaccount(accountaddress);
+
+        const contract=new ethers.Contract(constractAddress,ABI);
+        setcontract(contract);
+
+        const ownerAddress=await contract.getOwner();
+        setowner(ownerAddress.toLowerCase() === accountaddress.toLowerCase());
+        
+        
        }
        catch{
-   
+          console.error("wallet not working");
        }
          
-     }
+     };
 
+    wallet();
+    console.log("hello");
+    
    },[]);
+
+
+   
+
    
 }
+
+
+export default Healthcare;
 
 
