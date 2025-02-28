@@ -8,7 +8,7 @@ const Healthcare=()=>{
     const [Contract,setcontract]=useState(null);
     const [account,setaccount]=useState(null);
     const [isowner,setowner]=useState(null);
-    const [Provideraddress,setProvideraddress]=useState(null);
+    const [Provideraddress,setProvideraddress]=useState("");
     const [patientID,setpatientID]=useState("");
     const [patientrecord,setpatientrecord]=useState([]);
     const[treatment,settreamtment]=useState('');
@@ -156,16 +156,20 @@ const Healthcare=()=>{
 
         setaccount(accountaddress);
 
-        const contract=new ethers.Contract(constractAddress,ABI);
+        const contract=new ethers.Contract(constractAddress,ABI,signer);
         setcontract(contract);
 
         const ownerAddress=await contract.getOwner();
+        console.log("owner is ",ownerAddress);
+        console.log("account address is ",accountaddress);
+        
+        
         setowner(ownerAddress.toLowerCase() === accountaddress.toLowerCase());
         
         
        }
-       catch{
-          console.error("wallet not working");
+       catch(error){
+          console.error("wallet not working",error);
        }
          
      };
@@ -180,15 +184,19 @@ const Healthcare=()=>{
 
    const addingData=async()=>{
      try{
-        const tx=Contract.addrecord(patientID,"shekhar",diagnosis,treatment);
+        const tx=await Contract.addrecord(patientID,"shekhar",diagnosis,treatment);
         await tx.wait();
+        console.log("before updating in smart contract");
+        
         fetingpatientrecord();
         tx.wait();
+        
+        console.log("before updating in smart contract");
         alert(`Provider ${Provideraddress} authorized successfully`);
 
      }
-     catch{
-        console.log("error occur at addingdata");
+     catch(error){
+        console.log("error occur at addingdata",error);
         
      }
    }
@@ -196,24 +204,27 @@ const Healthcare=()=>{
    const fetingpatientrecord=async()=>{
     try{
        const record= await Contract.getrecord(patientID);
+       console.log(record);
+       
        setpatientrecord(record)
     }
     catch(error){
         console.error("error occur at fetching patient info")
     }
 }
-const authorizeprovider=async()=>{
-  if(isowner){
-   try{
+   const authorizeprovider=async()=>{
+   if(isowner){
+    try{
      const tx= await Contract.authenticateProvider(Provideraddress);
      tx.wait();
    }
    catch(error){
-      console.error("error occur at button",error)
+    console.error("Error occurred while authorizing provider", error);
+    alert("Failed to authorize provider. Check console for details.");
    }
  }
  else{
-    alert("owner can authencticate the provider")
+    alert("only owner can authencticate the provider")
  }
 }
    return(
@@ -250,11 +261,18 @@ const authorizeprovider=async()=>{
    
             <button className='action-button' onClick={authorizeprovider}>click here</button>
         </div>
-        {/* <div className='records-section'>
+        <div className='records-section'>
             <h2>patient record</h2>
-            {patientrecord.map(())}
+            {patientrecord.map((record,index)=>(
+              <div key = {index}>
+                    <p>Record ID: {record.recordID.toNumber()}</p>
+                    <p>Diagnosis: {record.diagnosis}</p>
+                    <p>Treatment: {record.treatment}</p>
+                    <p>Timestamp: {new Date(record.timestamp.toNumber() * 1000).toLocaleString()}</p>
+            </div>
+            ))}
 
-        </div> */}
+        </div>
      </div>
    )
 
